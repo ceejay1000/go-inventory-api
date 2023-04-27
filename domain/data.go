@@ -1,6 +1,15 @@
 package domain
 
-import "time"
+import (
+	"encoding/json"
+	"log"
+	"time"
+)
+
+// var Inventories = make(map[string][]Inventory)
+var Inventories = map[string][]*Inventory{
+	"inventories": {},
+}
 
 type Item struct {
 	Id       string `json:"id"`
@@ -24,4 +33,22 @@ type Owner struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Email     string `json:"email"`
+}
+
+func GetAllInventories() ([]byte, error) {
+	in := &Inventories
+	inventory, err := json.Marshal(in)
+
+	if err != nil {
+		log.Println("Cannot parse data to JSON")
+	}
+
+	return inventory, err
+}
+
+func AddInventory(in *Inventory) {
+	n := &Inventories
+	(*n)["inventories"] = append((*n)["inventories"], in)
+	log.Println("Inventories")
+	log.Println((*n))
 }

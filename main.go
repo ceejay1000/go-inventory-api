@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"net/http"
+
+	inventory "github.com/ceejay1000/inventory_api/handlers"
 )
 
 func init() {
@@ -21,6 +23,8 @@ func main() {
 	router := http.NewServeMux()
 
 	router.Handle("/", &defaultHandler{})
+
+	router.Handle("/inventory", &inventory.InventoryHandler{})
 
 	server := http.Server{
 		Addr:    ":9090",

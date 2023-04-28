@@ -3,6 +3,7 @@ package domain
 import (
 	"encoding/json"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -25,7 +26,7 @@ type Inventory struct {
 	DateCreated   time.Time `json:"date-created"`
 	DateUpdated   time.Time `json:"date-updated"`
 	NumberOfItems int       `json:"number-of-items"`
-	Items         []Item    `json:"items"`
+	Items         []*Item   `json:"items"`
 }
 
 type Owner struct {
@@ -51,4 +52,15 @@ func AddInventory(in *Inventory) {
 	(*n)["inventories"] = append((*n)["inventories"], in)
 	log.Println("Inventories")
 	log.Println((*n))
+}
+
+func InventoryExists(inventory Inventory) bool {
+	for _, in := range Inventories["inventories"] {
+
+		if inventory.Id == in.Id || strings.EqualFold(inventory.Name, in.Name) {
+			return true
+		}
+	}
+
+	return false
 }

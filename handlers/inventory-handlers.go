@@ -8,6 +8,7 @@ import (
 	"time"
 
 	data "github.com/ceejay1000/inventory_api/domain"
+	UUID "github.com/google/uuid"
 )
 
 type ErrorResponse struct {
@@ -66,7 +67,21 @@ func PostInventory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.Unmarshal(newInventory, parsedInventory)
+	parsedInventory.Id = UUID.NewString()
+	err = json.Unmarshal(newInventory, parsedInventory)
+
+	if err != nil {
+		log.Println("An error occured")
+		w.Write([]byte("Internal server error"))
+	}
+
+	inExists := data.InventoryExists(*parsedInventory)
+
+	if inExists {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Sorry!, the added inventory already exists. Start adding items to it"))
+		return
+	}
 
 	data.AddInventory(parsedInventory)
 

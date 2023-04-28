@@ -37,6 +37,41 @@ func (in *InventoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetInventory(w http.ResponseWriter, r *http.Request) {
+	urlSegments := strings.Split(r.URL.Path, "/")
+	inventoryId := ExtractInventoryId(urlSegments)
+
+	if inventoryId != "" {
+		inventoryExists := data.InventoryExistsById(inventoryId)
+
+		if !inventoryExists {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("Inventory with ID: " + inventoryId + " does not exist"))
+			return
+		}
+
+		inventory := data.GetInventoryById(inventoryId)
+
+		if inventory != nil {
+			parsedInventory := data.InventoryToJSON(inventory)
+
+			if parsedInventory == nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("Could not retrieve data please try again later!"))
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusFound)
+			w.Write(parsedInventory)
+			return
+		}
+
+		if inventory == nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("No inventory found"))
+			return
+		}
+	}
 
 	inventoryData, err := data.GetAllInventories()
 
@@ -112,6 +147,16 @@ func PostInventory(w http.ResponseWriter, r *http.Request) {
 
 func PutInventory(w http.ResponseWriter, r *http.Request) {
 
+	urlSegments := strings.Split(r.URL.Path, "/")
+	inventoryId := ExtractInventoryId(urlSegments)
+
+	if inventoryId == "" {
+		log.Println("Cannot update inventory. Id is not specified")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Cannot update inventory. Id is not specified"))
+		return
+	}
+
 	inventoryPayload, err := io.ReadAll(r.Body)
 
 	if err != nil {
@@ -122,6 +167,15 @@ func PutInventory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	parsedInventory, err := data.GetInventoryJSON(inventoryPayload)
+
+	if err != nil {
+		log.Println("Unable to parse request body")
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.Write([]byte("An error occured, please try again"))
+		return
+	}
+
+	parsedInventory.Id = inventoryId
 
 	updateStatus, inventoryId := data.UpdateInventory(*parsedInventory)
 
@@ -134,13 +188,6 @@ func PutInventory(w http.ResponseWriter, r *http.Request) {
 	if !updateStatus {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("Inventory with ID: " + inventoryId + " does not exist"))
-		return
-	}
-
-	if err != nil {
-		log.Println("Unable to parse request body")
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		w.Write([]byte("An error occured, please try again"))
 		return
 	}
 
@@ -167,7 +214,7 @@ func DeleteInventory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.DeleteInventory(inventoryId)
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Inventory with ID: " + inventoryId + " deleted successfully"))
 
 }

@@ -36,6 +36,18 @@ type Owner struct {
 	Email     string `json:"email"`
 }
 
+func GetInventoryById(id string) *Inventory {
+
+	for _, in := range Inventories["inventories"] {
+
+		if in.Id == id {
+			return in
+		}
+	}
+
+	return nil
+}
+
 func GetAllInventories() ([]byte, error) {
 	in := &Inventories
 	inventory, err := json.Marshal(in)
@@ -45,6 +57,17 @@ func GetAllInventories() ([]byte, error) {
 	}
 
 	return inventory, err
+}
+
+func InventoryToJSON(in *Inventory) []byte {
+	inventoryJSON, err := json.Marshal(in)
+
+	if err != nil {
+		log.Panicln("Error parsing Data")
+		return nil
+	}
+
+	return inventoryJSON
 }
 
 func AddInventory(in *Inventory) {

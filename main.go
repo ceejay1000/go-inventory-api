@@ -24,7 +24,7 @@ func main() {
 
 	router.Handle("/", &defaultHandler{})
 
-	router.Handle("/inventory", &inventory.InventoryHandler{})
+	router.Handle("/api/v1/inventory/", &inventory.InventoryHandler{})
 
 	server := http.Server{
 		Addr:    ":9090",

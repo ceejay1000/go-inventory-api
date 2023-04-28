@@ -64,3 +64,53 @@ func InventoryExists(inventory Inventory) bool {
 
 	return false
 }
+
+func InventoryExistsById(id string) bool {
+	for _, in := range Inventories["inventories"] {
+
+		if in.Id == id {
+			return true
+		}
+	}
+
+	return false
+}
+
+func GetInventoryJSON(inventoryPayload []byte) (*Inventory, error) {
+
+	parsedInventory := new(Inventory)
+
+	err := json.Unmarshal(inventoryPayload, parsedInventory)
+
+	return parsedInventory, err
+}
+
+func UpdateInventory(in Inventory) (bool, string) {
+
+	inventoryMatch := false
+
+	for _, inventory := range Inventories["inventories"] {
+
+		if inventory.Id == in.Id {
+			inventory.Name = in.Name
+			inventory.Items = in.Items
+			inventory.Owner = in.Owner
+			inventory.DateUpdated = time.Now()
+			inventoryMatch = true
+		}
+	}
+
+	return inventoryMatch, in.Id
+}
+
+func DeleteInventory(id string) {
+
+	for index, in := range Inventories["inventories"] {
+
+		if in.Id == id {
+			Inventories["inventories"] = append(
+				Inventories["inventories"][0:index],
+				Inventories["inventories"][index+1:len(Inventories["inventories"])]...)
+		}
+	}
+}

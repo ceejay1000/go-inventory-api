@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	data "github.com/ceejay1000/inventory_api/domain"
@@ -26,6 +28,10 @@ func (in *InventoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		GetInventory(w, r)
 	case http.MethodPost:
 		PostInventory(w, r)
+	case http.MethodPut:
+		PutInventory(w, r)
+	case http.MethodDelete:
+		DeleteInventory(w, r)
 	}
 
 }
@@ -106,8 +112,77 @@ func PostInventory(w http.ResponseWriter, r *http.Request) {
 
 func PutInventory(w http.ResponseWriter, r *http.Request) {
 
+	inventoryPayload, err := io.ReadAll(r.Body)
+
+	if err != nil {
+		log.Println("Unable to parse request body")
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.Write([]byte("An error occured, please try again"))
+		return
+	}
+
+	parsedInventory, err := data.GetInventoryJSON(inventoryPayload)
+
+	updateStatus, inventoryId := data.UpdateInventory(*parsedInventory)
+
+	if updateStatus {
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte("Inventory with ID: " + inventoryId + " updated successfully"))
+		return
+	}
+
+	if !updateStatus {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Inventory with ID: " + inventoryId + " does not exist"))
+		return
+	}
+
+	if err != nil {
+		log.Println("Unable to parse request body")
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.Write([]byte("An error occured, please try again"))
+		return
+	}
+
 }
 
 func DeleteInventory(w http.ResponseWriter, r *http.Request) {
+
+	urlSegments := strings.Split(r.URL.Path, "/")
+
+	inventoryId := ExtractInventoryId(urlSegments)
+
+	if inventoryId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Inventory with ID not specified"))
+		return
+	}
+
+	inventoryStatus := data.InventoryExistsById(inventoryId)
+
+	if !inventoryStatus {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Inventory with ID: " + inventoryId + " does not exist"))
+		return
+	}
+
+	data.DeleteInventory(inventoryId)
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("Inventory with ID: " + inventoryId + " deleted successfully"))
+
+}
+
+func ExtractInventoryId(urlSegments []string) string {
+
+	inventoryId := urlSegments[len(urlSegments)-1]
+
+	regexStr := `[\-\W\0-9\w]+`
+
+	if regexp.MustCompile(regexStr).MatchString(inventoryId) {
+		return inventoryId
+
+	}
+
+	return ""
 
 }

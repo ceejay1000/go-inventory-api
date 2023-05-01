@@ -20,19 +20,27 @@ func (dh *defaultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
+	item := new(inventory.Item)
+
+	owner := new(inventory.Owner)
+
 	router := http.NewServeMux()
 
 	router.Handle("/", &defaultHandler{})
 
 	router.Handle("/api/v1/inventory/", &inventory.InventoryHandler{})
 
+	router.Handle("/api/v1/item/", item)
+
+	router.Handle("/api/v1/owner/", owner)
+
 	server := http.Server{
-		Addr:    ":9090",
+		Addr:    ":9091",
 		Handler: router,
 	}
 
-	log.Println("Server started and listening on PORT :9090")
+	log.Println("Server started and listening on PORT :9091")
 	if err := server.ListenAndServe(); err != nil {
-		log.Panic("Internal Server Error")
+		log.Panic("Internal Server Error " + err.Error())
 	}
 }

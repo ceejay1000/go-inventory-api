@@ -223,11 +223,13 @@ func ExtractInventoryId(urlSegments []string) string {
 
 	inventoryId := urlSegments[len(urlSegments)-1]
 
-	regexStr := `[\-\W\0-9\w]+`
+	log.Println("Inventory ID: " + inventoryId)
+	// regexStr := `[\-\W\0-9\w]+`
+	regexStr := `^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`
 
 	if regexp.MustCompile(regexStr).MatchString(inventoryId) {
+		log.Println("Matched inventory ID")
 		return inventoryId
-
 	}
 
 	return ""

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"strings"
 	"time"
@@ -70,6 +71,17 @@ func InventoryToJSON(in *Inventory) []byte {
 	return inventoryJSON
 }
 
+func (it *Item) ItemToJSON() []byte {
+	itemJSON, err := json.Marshal(it)
+
+	if err != nil {
+		log.Panicln("Error parsing Data")
+		return nil
+	}
+
+	return itemJSON
+}
+
 func AddInventory(in *Inventory) {
 	n := &Inventories
 	(*n)["inventories"] = append((*n)["inventories"], in)
@@ -136,4 +148,37 @@ func DeleteInventory(id string) {
 				Inventories["inventories"][index+1:len(Inventories["inventories"])]...)
 		}
 	}
+}
+
+func (item *Item) ItemJsonToStruct(itemJson io.ReadCloser) (Item, error) {
+
+	itemSlice, err := io.ReadAll(itemJson)
+
+	if err != nil {
+		log.Println("Cannot parse item JSON")
+		return *item, err
+	}
+
+	err = json.Unmarshal(itemSlice, item)
+
+	if err != nil {
+		log.Println("Cannot convert item")
+		return *item, err
+	}
+
+	return *item, nil
+}
+
+func ItemsDataToJson(items interface{}) ([]byte, error) {
+
+	it := items.([]*Item)
+
+	itemJsonSlice, err := json.Marshal(it)
+
+	if err != nil {
+		log.Println("Cannot parse JSON data")
+		return nil, err
+	}
+
+	return itemJsonSlice, nil
 }
